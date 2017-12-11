@@ -3,7 +3,7 @@
 #include <random>
 #include <fstream>
 #include "Clock.h"
-#include "BinarySearchTree.h"
+#include "AvlTree.h"
 
 using namespace std;
 using namespace MyDictionary;
@@ -39,7 +39,7 @@ struct Value {
 	}
 };
 
-typedef BinarySearchTree<Key, Value> Tree;
+typedef AvlTree<Key, Value> Tree;
 
 void InsertRandom(Dictionary<Key, Value> &dict, int amount, default_random_engine &randomEngine) {
 	const int MIN_RANGE = -10000, MAX_RANGE = 10000;

@@ -40,10 +40,9 @@ namespace MyDictionary {
 				return &(node->value);
 		}
 
-		void Insert(TKey key, TValue value) {
-			size++;
+		virtual void Insert(TKey key, TValue value) {
 			if (root == nullptr) {
-				root = new Node(key, value);
+				root = Allocate(key, value);
 				return;
 			}
 			Node* currentNode = root;
@@ -52,14 +51,16 @@ namespace MyDictionary {
 					currentNode->value = value;
 				else if (key < currentNode->key) {
 					if (currentNode->left == nullptr) {
-						currentNode->left = new Node(key, value);
+						currentNode->left = Allocate(key, value);
+						Retrace(currentNode);
 						return;
 					}
 					currentNode = currentNode->left;
 				}
 				else {
 					if (currentNode->right == nullptr) {
-						currentNode->right = new Node(key, value);
+						currentNode->right = Allocate(key, value);
+						Retrace(currentNode);
 						return;
 					}
 					currentNode = currentNode->right;
@@ -89,7 +90,7 @@ namespace MyDictionary {
 		}
 
 
-	private:
+	protected:
 
 		class Node {
 		public:
@@ -154,6 +155,7 @@ namespace MyDictionary {
 					Node *parent = GetParent(node);
 					if (parent->right == node) parent->right = child;
 					else parent->left = child;
+					Retrace(parent);
 				}
 				node->left = nullptr;
 				node->right = nullptr;
@@ -185,9 +187,20 @@ namespace MyDictionary {
 				prev->right = node->right;
 				node->left = nullptr;
 				node->right = nullptr;
+
+				Retrace(prevParent);
 			}
 			delete node;
 			size--;
+		}
+
+		virtual Node* Allocate(TKey key, TValue value) {
+			size++;
+			return new Node(key, value);
+		}
+
+		virtual void Retrace(Node *node) {
+
 		}
 
 		Node* GetNode(TKey key) {
