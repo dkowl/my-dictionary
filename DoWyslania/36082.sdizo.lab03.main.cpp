@@ -1,5 +1,55 @@
-#pragma once
-#include "Dictionary.h"
+//SDIZO I1 XXXY LAB03
+//Dominik Kowalczyk
+//kd36082@zut.edu.pl
+
+//Program sklada sie z wielu plikow ktore "includuje recznie" ponizej
+
+//#include "Clock.h"
+
+#include <chrono>
+#include <string>
+#include <iostream>
+
+using namespace std;
+using namespace std::chrono;
+
+namespace MyUtils {
+
+	class Clock {
+
+	public:
+		static void Start(string s = "");
+		static void End();
+
+	private:
+		static steady_clock::time_point t1, t2;
+		static duration<double> timeSpan;
+		static bool clockStarted;
+	};
+}
+
+//#include "Dictionary.h"
+
+#include <vector>
+
+namespace MyDictionary {
+
+	template <typename TKey, typename TValue>
+	class Dictionary {
+
+	public:
+		typedef TValue const * ReturnType;
+
+		virtual void Insert(TKey key, TValue value) = 0;
+		virtual void Delete(TKey key) = 0;
+		virtual bool Contains(TKey key) = 0;
+		virtual ReturnType Search(TKey key) = 0;
+		virtual std::vector<ReturnType> GetValues() = 0;
+	};
+}
+
+//#include "BinarySearchTree.h"
+
 #include <stack>
 
 namespace MyDictionary {
@@ -21,6 +71,7 @@ namespace MyDictionary {
 
 		BinarySearchTree() {
 			root = nullptr;
+			size = 0;
 		}
 
 		~BinarySearchTree() {
@@ -40,6 +91,7 @@ namespace MyDictionary {
 		}	
 
 		void Insert(TKey key, TValue value) {
+			size++;
 			if (root == nullptr) {
 				root = new Node(key, value);
 				return;
@@ -82,6 +134,10 @@ namespace MyDictionary {
 			Traverse(root);
 		}
 
+		int Size() {
+			return size;
+		}
+
 
 	private:
 
@@ -117,12 +173,11 @@ namespace MyDictionary {
 				if (left != nullptr) return left;
 				else return right;
 			}
-
-			void 
 		};
 
 		static std::vector<ReturnType> values;
 		Node *root;
+		int size;
 		TraversalType traversalType;
 		void(*traversalCallback)(ReturnType);
 
@@ -132,12 +187,15 @@ namespace MyDictionary {
 			if (node->ChildCount() == 0) {
 				if (node == root) {
 					delete node;
+					size--;
 					root = nullptr;
 					return;
 				}
 				Node *parent = GetParent(node);
 				if (parent->right == node) parent->right = nullptr;
 				else parent->left = nullptr;
+				delete node;
+				size--;
 			}
 			else if (node->ChildCount() == 1) {
 				Node *child = node->GetOneChild();
@@ -151,36 +209,17 @@ namespace MyDictionary {
 				}
 				node->left = nullptr;
 				node->right = nullptr;
+				delete node;
+				size--;
 			}
 			else {
 				Node *prev = GetPredecessor(node);
-
-				//switching children
-				prev->left = node->left;
-				prev->right = node->right;
-				node->left = nullptr;
-				node->right = nullptr;
-
-				//removing prev from prevParent
-				Node *prevParent = GetParent(prev);
-				if (prevParent->left == prev)
-					prevParent->left = nullptr;
-				else
-					prevParent->right = nullptr;
-
-				//replacing node with prev for parent
-				if (node == root) {
-					root = prev;
-				}
-				else {
-					Node *parent = GetParent(node);
-					if (parent->left == node)
-						parent->left = prev;
-					else
-						parent->right = prev;
-				}
+				TKey newKey = prev->key;
+				TValue newValue = prev->value;
+				Delete(prev);
+				node->key = newKey;
+				node->value = newValue;
 			}
-			delete node;
 		}
 
 		Node* GetNode(TKey key) {
@@ -257,3 +296,136 @@ namespace MyDictionary {
 	template<typename TKey, typename TValue>
 	std::vector<typename BinarySearchTree<TKey, TValue>::ReturnType> BinarySearchTree<TKey, TValue>::values;
 }
+
+//#include "Clock.h"
+
+namespace MyUtils {
+
+	void Clock::Start(string s) {
+		if (!clockStarted) {
+			if (s.size()) cout << s << endl;
+			t1 = steady_clock::now();
+			clockStarted = true;
+		}
+	}
+
+	void Clock::End() {
+		t2 = steady_clock::now();
+		timeSpan = duration_cast<duration<double>>(t2 - t1);
+		cout << timeSpan.count() << " sekund" << endl;
+		clockStarted = false;
+	}
+
+	steady_clock::time_point Clock::t1, Clock::t2;
+	duration<double> Clock::timeSpan;
+	bool Clock::clockStarted;
+}
+
+//main.cpp
+
+#include <iostream>
+#include <vector>
+#include <random>
+
+using namespace std;
+using namespace MyDictionary;
+using namespace MyUtils;
+
+
+typedef int Key;
+struct Value {
+	static const int DATA_SIZE = 10;
+	char data[DATA_SIZE];
+
+	Value(int x) {
+		int i = 0;
+		int powerOf10 = 1000000000;
+		if (x < 0) {
+			data[0] = '-';
+			x *= -1;
+			i++;
+			powerOf10 /= 10;
+		}
+		for (; i < DATA_SIZE && powerOf10 > 0; i++, powerOf10 /= 10) {
+			data[i] = x / powerOf10;
+			x -= powerOf10 * data[i];
+			data[i] += '0';
+		}
+	}
+
+	void Print() const {
+		for (auto&& c : data) {
+			cout << c;
+		}
+		cout << endl;
+	}
+};
+
+typedef BinarySearchTree<Key, Value> Tree;
+
+void InsertRandom(Dictionary<Key, Value> &dict, int amount, default_random_engine &randomEngine) {
+	const int MIN_RANGE = -10000, MAX_RANGE = 10000;
+	const uniform_int_distribution<int> dist(MIN_RANGE, MAX_RANGE);
+
+	while (amount > 0) {
+		int r = dist(randomEngine);
+		if (dict.Search(r) == nullptr) {
+			dict.Insert(r, Value(r));
+			amount--;
+		}
+	}
+}
+
+void SearchRandom(Dictionary<Key, Value> &dict, int amount, default_random_engine &randomEngine) {
+	const int MIN_RANGE = -10000, MAX_RANGE = 10000;
+	const uniform_int_distribution<int> dist(MIN_RANGE, MAX_RANGE);
+
+	while (amount > 0) {
+		int r = dist(randomEngine);
+		dict.Contains(r);
+		amount--;
+	}
+}
+
+void PrintValue(Value const * value) {
+	value->Print();
+}
+
+void PrintValues(Tree &tree, Tree::TraversalType type) {
+	tree.Traverse(type, PrintValue);
+	cout << tree.Size() <<endl;
+}
+
+int main() {
+
+	default_random_engine randomEngine;
+
+	int x, k1, k2, k3, k4;
+	cin >> x >> k1 >> k2 >> k3 >> k4;
+
+	Clock::Start();
+
+	Tree tree = Tree();
+	tree.Delete(k1);
+	tree.Insert(k1, Value(k1));
+	InsertRandom(tree, x, randomEngine);
+	PrintValues(tree, Tree::TraversalType::InOrder);
+	PrintValues(tree, Tree::TraversalType::PreOrder);
+	tree.Insert(k2, Value(k2));
+	PrintValues(tree, Tree::TraversalType::InOrder);
+	tree.Insert(k3, Value(k3));
+	tree.Insert(k4, Value(k4));
+	tree.Delete(k1);
+	PrintValues(tree, Tree::TraversalType::PreOrder);
+	tree.Search(k1);
+	tree.Delete(k2);
+	PrintValues(tree, Tree::TraversalType::InOrder);
+	tree.Delete(k3);
+	tree.Delete(k4);
+
+	Clock::End();
+
+	system("PAUSE");
+	return 0;
+}
+
