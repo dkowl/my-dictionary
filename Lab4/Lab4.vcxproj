@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2078AD6D-2692-4E31-A6E3-F860495DAE94}</ProjectGuid>
-    <RootNamespace>DoWyslania3</RootNamespace>
+    <ProjectGuid>{04C023F9-9D29-49CF-917C-B66A310C3347}</ProjectGuid>
+    <RootNamespace>Lab4</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -118,7 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="36082.sdizo.lab03.main.cpp" />
+    <ClCompile Include="36082.sdizo.lab04.main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

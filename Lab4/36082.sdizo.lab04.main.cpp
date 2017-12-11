@@ -5,7 +5,6 @@
 //Program sklada sie z wielu plikow ktore "includuje recznie" ponizej
 
 //#include "Clock.h"
-
 #include <chrono>
 #include <string>
 #include <iostream>
@@ -29,7 +28,6 @@ namespace MyUtils {
 }
 
 //#include "Dictionary.h"
-
 #include <vector>
 
 namespace MyDictionary {
@@ -49,7 +47,6 @@ namespace MyDictionary {
 }
 
 //#include "BinarySearchTree.h"
-
 #include <stack>
 
 namespace MyDictionary {
@@ -90,10 +87,9 @@ namespace MyDictionary {
 				return &(node->value);
 		}
 
-		void Insert(TKey key, TValue value) {
-			size++;
+		virtual void Insert(TKey key, TValue value) {
 			if (root == nullptr) {
-				root = new Node(key, value);
+				root = Allocate(key, value);
 				return;
 			}
 			Node* currentNode = root;
@@ -102,14 +98,16 @@ namespace MyDictionary {
 					currentNode->value = value;
 				else if (key < currentNode->key) {
 					if (currentNode->left == nullptr) {
-						currentNode->left = new Node(key, value);
+						currentNode->left = Allocate(key, value);
+						Retrace(currentNode);
 						return;
 					}
 					currentNode = currentNode->left;
 				}
 				else {
 					if (currentNode->right == nullptr) {
-						currentNode->right = new Node(key, value);
+						currentNode->right = Allocate(key, value);
+						Retrace(currentNode);
 						return;
 					}
 					currentNode = currentNode->right;
@@ -139,7 +137,7 @@ namespace MyDictionary {
 		}
 
 
-	private:
+	protected:
 
 		class Node {
 		public:
@@ -187,6 +185,7 @@ namespace MyDictionary {
 			if (node->ChildCount() == 0) {
 				if (node == root) {
 					delete node;
+					size--;
 					root = nullptr;
 					return;
 				}
@@ -203,18 +202,13 @@ namespace MyDictionary {
 					Node *parent = GetParent(node);
 					if (parent->right == node) parent->right = child;
 					else parent->left = child;
+					Retrace(parent);
 				}
 				node->left = nullptr;
 				node->right = nullptr;
 			}
 			else {
 				Node *prev = GetPredecessor(node);
-
-				//switching children
-				prev->left = node->left;
-				prev->right = node->right;
-				node->left = nullptr;
-				node->right = nullptr;
 
 				//removing prev from prevParent
 				Node *prevParent = GetParent(prev);
@@ -223,7 +217,7 @@ namespace MyDictionary {
 				else
 					prevParent->right = nullptr;
 
-				//replacing node with prev for parent
+				//replacing node with prev
 				if (node == root) {
 					root = prev;
 				}
@@ -234,8 +228,26 @@ namespace MyDictionary {
 					else
 						parent->right = prev;
 				}
+
+				//switching children
+				prev->left = node->left;
+				prev->right = node->right;
+				node->left = nullptr;
+				node->right = nullptr;
+
+				Retrace(prevParent);
 			}
 			delete node;
+			size--;
+		}
+
+		virtual Node* Allocate(TKey key, TValue value) {
+			size++;
+			return new Node(key, value);
+		}
+
+		virtual void Retrace(Node *node) {
+
 		}
 
 		Node* GetNode(TKey key) {
@@ -313,8 +325,130 @@ namespace MyDictionary {
 	std::vector<typename BinarySearchTree<TKey, TValue>::ReturnType> BinarySearchTree<TKey, TValue>::values;
 }
 
-//#include "Clock.cpp"
+//#include "AvlTree.h"
+#include <algorithm>
 
+namespace MyDictionary {
+
+	template<typename TKey, typename TValue>
+	class AvlTree : public BinarySearchTree<TKey, TValue> {
+
+	private:
+
+		class AvlNode : public Node {
+		public:
+			int height;
+
+			AvlNode(TKey key, TValue value) :
+				Node(key, value),
+				height(1)
+			{
+
+			}
+
+			void UpdateHeight() {
+				height = Height();
+			}
+
+			int BalanceFactor() {
+				int
+					lf = 0,
+					rf = 0;
+
+				if (left != nullptr)
+					lf = ((AvlNode*)left)->height;
+				if (right != nullptr)
+					rf = ((AvlNode*)right)->height;
+
+				return lf - rf;
+			}
+
+			int Height() {
+				int
+					lh = 0,
+					rh = 0;
+
+				if (left != nullptr)
+					lh = ((AvlNode*)left)->height;
+				if (right != nullptr)
+					rh = ((AvlNode*)right)->height;
+
+				return std::max(lh, rh) + 1;
+			}
+		};
+
+		virtual Node* Allocate(TKey key, TValue value) {
+			size++;
+			return new AvlNode(key, value);
+		}
+
+		void Retrace(Node *node) {
+			//building parent stack
+			std::stack<AvlNode*> parentStack;
+			AvlNode* currentNode = (AvlNode*)root;
+			while (true) {
+				if (currentNode == node)
+					break;
+
+				parentStack.push(currentNode);
+				if (node->key < currentNode->key) {
+					currentNode = (AvlNode*)currentNode->left;
+				}
+				else {
+					currentNode = (AvlNode*)currentNode->right;
+				}
+			}
+
+			while (!parentStack.size() > 1) {
+				AvlNode *parent = parentStack.top();
+				parentStack.pop();
+				AvlNode *grandparent = parentStack.top();
+
+				if (std::abs(parent->BalanceFactor()) > 1) {
+					bool firstLeft, secondLeft;
+					firstLeft = parent->left == currentNode;
+					secondLeft = node->key < currentNode->key;
+					if (firstLeft == secondLeft) {
+						Rotate(currentNode, parent, grandparent);
+					}
+					else if (firstLeft && !secondLeft) {
+						Rotate((AvlNode*)currentNode->right, currentNode, parent);
+						Rotate((AvlNode*)parent->left, parent, grandparent);
+					}
+					else if (!firstLeft && secondLeft) {
+						Rotate((AvlNode*)currentNode->left, currentNode, parent);
+						Rotate((AvlNode*)parent->right, parent, grandparent);
+					}
+				}
+
+				currentNode = parent;
+			}
+		}
+
+		void Rotate(AvlNode *node, AvlNode *parent, AvlNode *grandparent) {
+			if (grandparent->left == parent) {
+				grandparent->left = node;
+			}
+			else {
+				grandparent->right = node;
+			}
+
+			if (parent->left == node) {
+				parent->left = node->right;
+				node->right = parent;
+			}
+			else {
+				parent->right = node->left;
+				node->left = parent;
+			}
+			parent->UpdateHeight();
+			node->UpdateHeight();
+			grandparent->UpdateHeight();
+		}
+	};
+}
+
+//#include "Clock.cpp"
 namespace MyUtils {
 
 	void Clock::Start(string s) {
@@ -338,7 +472,6 @@ namespace MyUtils {
 }
 
 //main.cpp
-
 #include <iostream>
 #include <vector>
 #include <random>
@@ -378,7 +511,7 @@ struct Value {
 	}
 };
 
-typedef BinarySearchTree<Key, Value> Tree;
+typedef AvlTree<Key, Value> Tree;
 
 void InsertRandom(Dictionary<Key, Value> &dict, int amount, default_random_engine &randomEngine) {
 	const int MIN_RANGE = -10000, MAX_RANGE = 10000;
@@ -417,11 +550,17 @@ int main() {
 
 	default_random_engine randomEngine;
 
-	fstream file("inlab03.txt");
-
+	fstream file("inlab04.txt");
 	int x, k1, k2, k3, k4;
-	file >> x >> k1 >> k2 >> k3 >> k4;
-	file.close();
+	if (file.good()) {
+		file >> x >> k1 >> k2 >> k3 >> k4;
+		file.close();
+	}
+	else {
+		cout << "File not found" << endl;
+		system("PAUSE");
+		return 1;
+	}
 
 	Clock::Start();
 
@@ -445,5 +584,6 @@ int main() {
 
 	Clock::End();
 
+	system("PAUSE");
 	return 0;
 }

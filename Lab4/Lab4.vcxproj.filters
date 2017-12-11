@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="36082.sdizo.lab03.main.cpp">
+    <ClCompile Include="36082.sdizo.lab04.main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
