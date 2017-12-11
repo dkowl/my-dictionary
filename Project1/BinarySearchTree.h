@@ -13,14 +13,15 @@ namespace MyDictionary {
 			InOrder,
 			PreOrder,
 			PostOrder
-		}; 
-		
+		};
+
 		static void AddValue(ReturnType value) {
 			values.push_back(value);
 		}
 
 		BinarySearchTree() {
 			root = nullptr;
+			size = 0;
 		}
 
 		~BinarySearchTree() {
@@ -37,9 +38,10 @@ namespace MyDictionary {
 				return nullptr;
 			else
 				return &(node->value);
-		}	
+		}
 
 		void Insert(TKey key, TValue value) {
+			size++;
 			if (root == nullptr) {
 				root = new Node(key, value);
 				return;
@@ -82,6 +84,10 @@ namespace MyDictionary {
 			Traverse(root);
 		}
 
+		int Size() {
+			return size;
+		}
+
 
 	private:
 
@@ -117,12 +123,11 @@ namespace MyDictionary {
 				if (left != nullptr) return left;
 				else return right;
 			}
-
-			void 
 		};
 
 		static std::vector<ReturnType> values;
 		Node *root;
+		int size;
 		TraversalType traversalType;
 		void(*traversalCallback)(ReturnType);
 
@@ -132,6 +137,7 @@ namespace MyDictionary {
 			if (node->ChildCount() == 0) {
 				if (node == root) {
 					delete node;
+					size--;
 					root = nullptr;
 					return;
 				}
@@ -155,12 +161,6 @@ namespace MyDictionary {
 			else {
 				Node *prev = GetPredecessor(node);
 
-				//switching children
-				prev->left = node->left;
-				prev->right = node->right;
-				node->left = nullptr;
-				node->right = nullptr;
-
 				//removing prev from prevParent
 				Node *prevParent = GetParent(prev);
 				if (prevParent->left == prev)
@@ -168,7 +168,7 @@ namespace MyDictionary {
 				else
 					prevParent->right = nullptr;
 
-				//replacing node with prev for parent
+				//replacing node with prev
 				if (node == root) {
 					root = prev;
 				}
@@ -179,8 +179,15 @@ namespace MyDictionary {
 					else
 						parent->right = prev;
 				}
+
+				//switching children
+				prev->left = node->left;
+				prev->right = node->right;
+				node->left = nullptr;
+				node->right = nullptr;
 			}
 			delete node;
+			size--;
 		}
 
 		Node* GetNode(TKey key) {

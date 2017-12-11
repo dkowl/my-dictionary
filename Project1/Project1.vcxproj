@@ -125,6 +125,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AvlTree.h" />
     <ClInclude Include="BinarySearchTree.h" />
     <ClInclude Include="Clock.h" />
     <ClInclude Include="Dictionary.h" />

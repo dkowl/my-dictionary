@@ -187,15 +187,12 @@ namespace MyDictionary {
 			if (node->ChildCount() == 0) {
 				if (node == root) {
 					delete node;
-					size--;
 					root = nullptr;
 					return;
 				}
 				Node *parent = GetParent(node);
 				if (parent->right == node) parent->right = nullptr;
 				else parent->left = nullptr;
-				delete node;
-				size--;
 			}
 			else if (node->ChildCount() == 1) {
 				Node *child = node->GetOneChild();
@@ -209,17 +206,36 @@ namespace MyDictionary {
 				}
 				node->left = nullptr;
 				node->right = nullptr;
-				delete node;
-				size--;
 			}
 			else {
 				Node *prev = GetPredecessor(node);
-				TKey newKey = prev->key;
-				TValue newValue = prev->value;
-				Delete(prev);
-				node->key = newKey;
-				node->value = newValue;
+
+				//switching children
+				prev->left = node->left;
+				prev->right = node->right;
+				node->left = nullptr;
+				node->right = nullptr;
+
+				//removing prev from prevParent
+				Node *prevParent = GetParent(prev);
+				if (prevParent->left == prev)
+					prevParent->left = nullptr;
+				else
+					prevParent->right = nullptr;
+
+				//replacing node with prev for parent
+				if (node == root) {
+					root = prev;
+				}
+				else {
+					Node *parent = GetParent(node);
+					if (parent->left == node)
+						parent->left = prev;
+					else
+						parent->right = prev;
+				}
 			}
+			delete node;
 		}
 
 		Node* GetNode(TKey key) {
