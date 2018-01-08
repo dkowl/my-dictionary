@@ -70,7 +70,7 @@ void PrintValue(Value const * value) {
 }
 
 void PrintValues(Tree &tree, Tree::TraversalType type) {
-	tree.Traverse(type, PrintValue);
+	tree.TraverseAndShowHeight(type, PrintValue);
 	cout << tree.Size() << endl;
 }
 
@@ -78,7 +78,7 @@ int main() {
 
 	default_random_engine randomEngine;
 
-	fstream file("inlab03.txt");
+	fstream file("inlab04.txt");
 	int x, k1, k2, k3, k4;
 	if (file.good()) {
 		file >> x >> k1 >> k2 >> k3 >> k4;
@@ -111,29 +111,6 @@ int main() {
 	tree.Delete(k4);
 
 	Clock::End();
-
-	/* speed test
-
-	BinarySearchTree<Key, Value> dict = BinarySearchTree<Key, Value>();
-
-	int testNo = 10;
-	cout << "Inserting " << testNo << " elements\n";
-	Clock::Start();
-	InsertRandom(dict, testNo, randomEngine);
-	Clock::End();
-	cout << "Searching " << testNo << " elements\n";
-	Clock::Start();
-	SearchRandom(dict, testNo, randomEngine);
-	Clock::End();
-
-	int deleteTestCount = 5;
-	for (int i = 0; i < deleteTestCount; i++) {
-		PrintValues(dict);
-		Key toDelete;
-		cout << "Key to delete: ";
-		cin >> toDelete;
-		dict.Delete(toDelete);
-	}*/
 
 	system("PAUSE");
 	return 0;

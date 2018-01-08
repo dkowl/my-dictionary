@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="36082.sdizo.labo4.main.cpp" />
+    <ClCompile Include="36082.sdizo.lab04.main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{32D09A1B-57A5-4193-BE90-DE7AEA25E57D}</ProjectGuid>

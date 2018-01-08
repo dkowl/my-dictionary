@@ -2,11 +2,49 @@
 
 #include "BinarySearchTree.h"
 #include <algorithm>
+#include <queue>
 
 namespace MyDictionary {
 
 	template<typename TKey, typename TValue>
 	class AvlTree : public BinarySearchTree<TKey, TValue> {
+
+	public:
+
+		void TraverseAndShowHeight(TraversalType type, void(*callback)(ReturnType)) {
+			traversalType = type;
+			traversalCallback = callback;
+			TraverseAndShowHeight((AvlNode*)root);
+		}
+
+		virtual void Display() {
+			queue<AvlNode*> nodeQueue;
+			queue<int> levelQueue;
+			int previousLevel = 0;
+			nodeQueue.push((AvlNode*)root);
+			levelQueue.push(0);
+			while (!nodeQueue.empty()) {
+				AvlNode* currentNode = nodeQueue.front();
+				int currentLevel = levelQueue.front();
+				nodeQueue.pop();
+				levelQueue.pop();
+				if (currentLevel > previousLevel) {
+					cout << endl;
+				}
+				if (currentNode == nullptr) {
+					cout << "null ";
+				}
+				else {
+					cout << currentNode->key << "(" << currentNode->height << ")[" << currentNode->BalanceFactor() << "] ";
+					nodeQueue.push((AvlNode*)currentNode->left);
+					levelQueue.push(currentLevel + 1);
+					nodeQueue.push((AvlNode*)currentNode->right);
+					levelQueue.push(currentLevel + 1);
+				}
+				previousLevel = currentLevel;
+			}
+			cout << endl << endl;
+		}
 
 	private:
 
@@ -50,6 +88,10 @@ namespace MyDictionary {
 
 				return std::max(lh, rh) + 1;
 			}
+
+			void DisplayHeight() {
+				cout << " (" << height << ") ";
+			}
 		};
 
 		virtual Node* Allocate(TKey key, TValue value) {
@@ -57,32 +99,45 @@ namespace MyDictionary {
 			return new AvlNode(key, value);
 		}
 
-		void Retrace(Node *node){
+		void Retrace(Node *node) {
 			//building parent stack
 			std::stack<AvlNode*> parentStack;
 			AvlNode* currentNode = (AvlNode*)root;
 			while (true) {
+				parentStack.push(currentNode);
+
 				if (currentNode == node)
 					break;
 
-				parentStack.push(currentNode);
 				if (node->key < currentNode->key) {
-					currentNode = (AvlNode*)currentNode->left;
+					if (currentNode->left != nullptr)
+						currentNode = (AvlNode*)currentNode->left;
+					else
+						break;
 				}
 				else {
-					currentNode = (AvlNode*)currentNode->right;
+					if (currentNode->right != nullptr)
+						currentNode = (AvlNode*)currentNode->right;
+					else
+						break;
 				}
 			}
 
-			while (!parentStack.size() > 1) {
+			currentNode->UpdateHeight();
+			while (!parentStack.empty()) {
 				AvlNode *parent = parentStack.top();
+				parent->UpdateHeight();
 				parentStack.pop();
-				AvlNode *grandparent = parentStack.top();
+				AvlNode *grandparent = nullptr;
+				if (!parentStack.empty()) {
+					grandparent = parentStack.top();
+					grandparent->UpdateHeight();
+				}
 
 				if (std::abs(parent->BalanceFactor()) > 1) {
 					bool firstLeft, secondLeft;
 					firstLeft = parent->left == currentNode;
-					secondLeft = node->key < currentNode->key;
+					secondLeft = currentNode->BalanceFactor() > 0;
 					if (firstLeft == secondLeft) {
 						Rotate(currentNode, parent, grandparent);
 					}
@@ -101,7 +156,19 @@ namespace MyDictionary {
 		}
 
 		void Rotate(AvlNode *node, AvlNode *parent, AvlNode *grandparent) {
-			if (grandparent->left == parent) {
+			/*cout << "Before: " << node->BalanceFactor() << " " << parent->BalanceFactor() << " ";
+			if (grandparent != nullptr) {
+			cout << grandparent->BalanceFactor();
+			}
+			else {
+			cout << " - ";
+			}
+			cout << endl;*/
+			//Display();
+			if (grandparent == nullptr) {
+				root = node;
+			}
+			else if (grandparent->left == parent) {
 				grandparent->left = node;
 			}
 			else {
@@ -118,7 +185,32 @@ namespace MyDictionary {
 			}
 			parent->UpdateHeight();
 			node->UpdateHeight();
-			grandparent->UpdateHeight();
+			if (grandparent != nullptr) grandparent->UpdateHeight();
+			/*cout << "After: " << node->BalanceFactor() << " " << parent->BalanceFactor() << " ";
+			if (grandparent != nullptr) {
+			cout << grandparent->BalanceFactor();
+			}
+			else {
+			cout << " - ";
+			}
+			cout << endl;*/
+		}
+
+		void TraverseAndShowHeight(AvlNode *node) {
+			if (traversalType == PreOrder) {
+				traversalCallback(&node->value);
+				node->DisplayHeight();
+			}
+			if (node->left != nullptr) TraverseAndShowHeight((AvlNode*)(node->left));
+			if (traversalType == InOrder) {
+				traversalCallback(&node->value);
+				node->DisplayHeight();
+			}
+			if (node->right != nullptr) TraverseAndShowHeight((AvlNode*)(node->right));
+			if (traversalType == PostOrder) {
+				traversalCallback(&node->value);
+				node->DisplayHeight();
+			}
 		}
 	};
 }

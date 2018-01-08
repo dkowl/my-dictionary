@@ -89,6 +89,35 @@ namespace MyDictionary {
 			return size;
 		}
 
+		virtual void Display() {
+			queue<Node*> nodeQueue;
+			queue<int> levelQueue;
+			int previousLevel = 0;
+			nodeQueue.push(root);
+			levelQueue.push(0);
+			while (!nodeQueue.empty()) {
+				Node* currentNode = nodeQueue.front();
+				int currentLevel = levelQueue.front();
+				nodeQueue.pop();
+				levelQueue.pop();
+				if (currentLevel > previousLevel) {
+					cout << endl;
+				}
+				if (currentNode == nullptr) {
+					cout << "null ";
+				}
+				else {
+					cout << currentNode->key << " ";
+					nodeQueue.push(currentNode->left);
+					levelQueue.push(currentLevel + 1);
+					nodeQueue.push(currentNode->right);
+					levelQueue.push(currentLevel + 1);
+				}
+				previousLevel = currentLevel;
+			}
+			cout << endl << endl;
+		}
+
 
 	protected:
 
@@ -165,10 +194,11 @@ namespace MyDictionary {
 
 				//removing prev from prevParent
 				Node *prevParent = GetParent(prev);
+				Node *prevChild = prev->GetOneChild();
 				if (prevParent->left == prev)
-					prevParent->left = nullptr;
+					prevParent->left = prevChild;
 				else
-					prevParent->right = nullptr;
+					prevParent->right = prevChild;
 
 				//replacing node with prev
 				if (node == root) {

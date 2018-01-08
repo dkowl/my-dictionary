@@ -14,5 +14,6 @@ namespace MyDictionary {
 		virtual bool Contains(TKey key) = 0;
 		virtual ReturnType Search(TKey key) = 0;
 		virtual std::vector<ReturnType> GetValues() = 0;
+		virtual void Display() = 0;
 	};
 }
