@@ -47,8 +47,10 @@ namespace MyDictionary {
 			}
 			Node* currentNode = root;
 			while (true) {
-				if (key == currentNode->key)
+				if (key == currentNode->key) {
 					currentNode->value = value;
+					return;
+				}
 				else if (key < currentNode->key) {
 					if (currentNode->left == nullptr) {
 						currentNode->left = Allocate(key, value);
@@ -152,6 +154,10 @@ namespace MyDictionary {
 			Node* GetOneChild() {
 				if (left != nullptr) return left;
 				else return right;
+			}
+
+			bool IsParentOf(Node* node) {
+				return left == node || right == node;
 			}
 		};
 

@@ -4,6 +4,7 @@
 #include <fstream>
 #include "Clock.h"
 #include "AvlTree.h"
+#include "LinkedList.h"
 
 using namespace std;
 using namespace MyDictionary;
@@ -39,7 +40,7 @@ struct Value {
 	}
 };
 
-typedef AvlTree<Key, Value> Tree;
+typedef AvlTree<Key, Value> Dict;
 
 void InsertRandom(Dictionary<Key, Value> &dict, int amount, default_random_engine &randomEngine) {
 	const int MIN_RANGE = -10000, MAX_RANGE = 10000;
@@ -69,16 +70,94 @@ void PrintValue(Value const * value) {
 	value->Print();
 }
 
-void PrintValues(Tree &tree, Tree::TraversalType type) {
+void PrintValues(AvlTree<Key, Value> &tree, AvlTree<Key, Value>::TraversalType type) {
 	tree.TraverseAndShowHeight(type, PrintValue);
 	cout << tree.Size() << endl;
+}
+
+struct Nothing {
+
+};
+
+void TestDictionary(Dictionary<int, Nothing> &dict, int n, bool isRandom, default_random_engine &randomEngine, int seed) {
+	const int MIN_RANGE = 0, MAX_RANGE = 100000;
+	const uniform_int_distribution<int> dist(MIN_RANGE, MAX_RANGE);
+	randomEngine.seed(seed);
+
+	cout << "==========================================\n";
+	cout << "Testing... || n = " << n << " || ";
+	if (isRandom) cout << "random values ";
+	else cout << "ordered values ";
+	cout << "\n\n";
+
+	//Inserting
+	Clock::Start();
+	for (int i = 0; i < n; i++) {
+		int key;
+		if (i % 2 && !isRandom)
+			key = i / 2;
+		else
+			key = dist(randomEngine);
+		dict.Insert(key, Nothing());
+	}
+	cout << "Elements inserted: " << dict.Size() << endl;
+	Clock::End();
+	cout << endl;
+
+	//Searching
+	int count = 0;
+	Clock::Start();
+	for (int i = 0; i < n; i++) {
+		int key;
+		if (i % 2 && !isRandom)
+			key = i / 2;
+		else
+			key = dist(randomEngine);
+		if(dict.Contains(key)) count++;
+	}
+	cout << "Elements found: " << count << endl;
+	Clock::End();
+	cout << endl;
+
+	//Deleting
+	int sizeBefore = dict.Size();
+	Clock::Start();
+	for (int i = 0; i < n; i++) {
+		int key;
+		if (i % 2 && !isRandom)
+			key = i / 2;
+		else
+			key = dist(randomEngine);
+		dict.Delete(key);
+	}
+	cout << "Elements deleted: " << sizeBefore - dict.Size() << endl;
+	Clock::End();
+	cout << endl << endl << endl;
 }
 
 int main() {
 
 	default_random_engine randomEngine;
 
-	fstream file("inlab04.txt");
+	int testCount = 5;
+	int n[] = { 10000, 15000, 20000, 25000, 30000 };
+	int seed[] = { 12710, 108542, 387666, 764929, 873881 };
+
+	int i = 0;
+	int isRandom = true;
+	while (i < testCount) {
+		cout << "BinarySearchTree " << endl;
+		TestDictionary(BinarySearchTree<int, Nothing>(), n[i], isRandom, randomEngine, seed[i]);
+		cout << "AvlTree " << endl;
+		TestDictionary(AvlTree<int, Nothing>(), n[i], isRandom, randomEngine, seed[i]);
+		cout << "LinkedList " << endl;
+		TestDictionary(LinkedList<int, Nothing>(), n[i], isRandom, randomEngine, seed[i]);
+
+		if (!isRandom) i++;
+		isRandom = !isRandom;
+	}
+
+	/*fstream file("inlab04.txt");
 	int x, k1, k2, k3, k4;
 	if (file.good()) {
 		file >> x >> k1 >> k2 >> k3 >> k4;
@@ -92,25 +171,25 @@ int main() {
 
 	Clock::Start();
 
-	Tree tree = Tree();
-	tree.Delete(k1);
-	tree.Insert(k1, Value(k1));
-	InsertRandom(tree, x, randomEngine);
-	PrintValues(tree, Tree::TraversalType::InOrder);
-	PrintValues(tree, Tree::TraversalType::PreOrder);
-	tree.Insert(k2, Value(k2));
-	PrintValues(tree, Tree::TraversalType::InOrder);
-	tree.Insert(k3, Value(k3));
-	tree.Insert(k4, Value(k4));
-	tree.Delete(k1);
-	PrintValues(tree, Tree::TraversalType::PreOrder);
-	tree.Search(k1);
-	tree.Delete(k2);
-	PrintValues(tree, Tree::TraversalType::InOrder);
-	tree.Delete(k3);
-	tree.Delete(k4);
+	Dict dict = Dict();
+	dict.Delete(k1);
+	dict.Insert(k1, Value(k1));
+	InsertRandom(dict, x, randomEngine);
+	PrintValues(dict, Dict::TraversalType::InOrder);
+	PrintValues(dict, Dict::TraversalType::PreOrder);
+	dict.Insert(k2, Value(k2));
+	PrintValues(dict, Dict::TraversalType::InOrder);
+	dict.Insert(k3, Value(k3));
+	dict.Insert(k4, Value(k4));
+	dict.Delete(k1);
+	PrintValues(dict, Dict::TraversalType::PreOrder);
+	dict.Search(k1);
+	dict.Delete(k2);
+	PrintValues(dict, Dict::TraversalType::InOrder);
+	dict.Delete(k3);
+	dict.Delete(k4);
 
-	Clock::End();
+	Clock::End();*/
 
 	system("PAUSE");
 	return 0;

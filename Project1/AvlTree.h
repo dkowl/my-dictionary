@@ -90,7 +90,7 @@ namespace MyDictionary {
 			}
 
 			void DisplayHeight() {
-				cout << " (" << height << ") ";
+				cout << " (" << BalanceFactor() << ") ";
 			}
 		};
 
@@ -122,9 +122,16 @@ namespace MyDictionary {
 						break;
 				}
 			}
-
+			if (!parentStack.empty() && parentStack.top() == currentNode) {
+				parentStack.pop();
+			}
 			currentNode->UpdateHeight();
 			while (!parentStack.empty()) {
+				if (currentNode->left == nullptr && currentNode->right == nullptr) {
+					currentNode = parentStack.top();
+					parentStack.pop();
+					continue;
+				}
 				AvlNode *parent = parentStack.top();
 				parent->UpdateHeight();
 				parentStack.pop();
@@ -142,16 +149,21 @@ namespace MyDictionary {
 						Rotate(currentNode, parent, grandparent);
 					}
 					else if (firstLeft && !secondLeft) {
+						AvlNode* nextCurrentNode = (AvlNode*)currentNode->right;
 						Rotate((AvlNode*)currentNode->right, currentNode, parent);
 						Rotate((AvlNode*)parent->left, parent, grandparent);
+						currentNode = nextCurrentNode;
 					}
 					else if (!firstLeft && secondLeft) {
+						AvlNode* nextCurrentNode = (AvlNode*)currentNode->left;
 						Rotate((AvlNode*)currentNode->left, currentNode, parent);
 						Rotate((AvlNode*)parent->right, parent, grandparent);
+						currentNode = nextCurrentNode;
 					}
 				}
-
-				currentNode = parent;
+				else {
+					currentNode = parent;
+				}
 			}
 		}
 
@@ -165,6 +177,7 @@ namespace MyDictionary {
 			}
 			cout << endl;*/
 			//Display();
+			//Debug assertion:
 			if (grandparent == nullptr) {
 				root = node;
 			}
